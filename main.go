@@ -11,8 +11,26 @@ import (
 // for assembling a HTTP response and sending it to a user and the *http.Request
 // parameter which is a pointer to a struct which holds information about the 
 // current request.
-func home(w http.ResponseWriter, r *http.Request)  {
+func home(w http.ResponseWriter, r *http.Request) {
+	// Check if the current request URL path exactly matches "/".
+	// If not, use http.NotFound() to send a 404 response to client and then return. 
+	// If we don't return, the handler would keep executing and write the byte slice.
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	
 	w.Write([]byte("Hello from Snippetbox"))	
+}
+
+// Add a snippetView handler function
+func snippetView(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display a specific snippet..."))
+}
+
+// Add a snippetCreate handler function
+func snippetCreate(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet..."))
 }
 
 func main() {
@@ -20,6 +38,8 @@ func main() {
 	// the home function as the handler for the "/" URL pattern.
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
+	mux.HandleFunc("/snippet/view", snippetView)
+	mux.HandleFunc("/snippet/create", snippetCreate)
 
 	// Use http.ListenAndServe() to start a new web server. 
 	// Pass in two parameters: the TCP network address to listen on (":4000")
