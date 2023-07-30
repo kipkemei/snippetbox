@@ -9,18 +9,18 @@ import (
 // "Hello from Snippetbox" as the response body.
 // home() takes two parameters: http.ResponseWriter which provides methods
 // for assembling a HTTP response and sending it to a user and the *http.Request
-// parameter which is a pointer to a struct which holds information about the 
+// parameter which is a pointer to a struct which holds information about the
 // current request.
 func home(w http.ResponseWriter, r *http.Request) {
 	// Check if the current request URL path exactly matches "/".
-	// If not, use http.NotFound() to send a 404 response to client and then return. 
+	// If not, use http.NotFound() to send a 404 response to client and then return.
 	// If we don't return, the handler would keep executing and write the byte slice.
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-	
-	w.Write([]byte("Hello from Snippetbox"))	
+
+	w.Write([]byte("Hello from Snippetbox"))
 }
 
 // Add a snippetView handler function
@@ -31,16 +31,14 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 // Add a snippetCreate handler function
 func snippetCreate(w http.ResponseWriter, r *http.Request) {
 	// Use r.Method to check whether the request is using POST or not.
-	if r.Method != "POST" {
-		// If it's not, use w.WriteHeader() method to send a 405 status code 
-		// and w.Write() method to write a "Method Not Allowed" response body.
+	if r.Method != http.MethodPost {
+		// Use http.Error() to send a 405 status code "Method Not Allowed" response body.
 		// Then return from the function to prevent execution of subsequent code.
-		w.Header().Set("Allow", "POST")
-		w.WriteHeader(405)
-		w.Write([]byte("Method Not Allowed"))
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("Create a new snippet..."))
 }
 
@@ -52,9 +50,9 @@ func main() {
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	// Use http.ListenAndServe() to start a new web server. 
+	// Use http.ListenAndServe() to start a new web server.
 	// Pass in two parameters: the TCP network address to listen on (":4000")
-	// and the servemux. If http.ListenAndServe() returns an error, 
+	// and the servemux. If http.ListenAndServe() returns an error,
 	// use log.Fatal() to log the error message and exit.
 	// Note: Errors returned by http.ListenAndServe() are always non-nil.
 	log.Print("Starting server on :4000")
