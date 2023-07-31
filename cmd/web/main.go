@@ -5,29 +5,20 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"os"
 )
 
 func main() {
-	// Define a new command-line flag with the name 'addr', a default value of ":4000"
-	// and some short help text explaining what the flag controls. The value of the flag 
-	// will be stored in the 'addr' variable at runtime.
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
-	// Use flag.Parse() to read the command-line flag value and assign it to 'addr'.
-	// It should be called before the variable is used, else it'll contain the default value.
-	// The application is terminated if any errors are encountered during parsing.
 	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
 
 	mux := http.NewServeMux()
 
-	// Create a file server which serves files out of "./ui/static" directory.
-	// The path given to http.Dir() is relative to the project root.
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
-
-	// Use mux.Handle() to register the file server as the handler for all URL
-	// paths that start with "/static/". For matching parts, strip the prefix
-	// "/static" before the request reaches the file server.
-	mux.Handle("/static", http.NotFoundHandler())
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
 	// Register the other application routes as normal.
@@ -35,9 +26,19 @@ func main() {
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	log.Printf("Starting server on %s", *addr)
-	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	// Initialize a new http.Server struct. Set the Addr and Handler fields so that the
+	// server uses the same network address routes as before. Set the ErrorLog field
+	// so that the server now uses the custom errorLog logger.
+	srv := &http.Server{
+		Addr: *addr,
+		ErrorLog: errorLog,
+		Handler: mux,
+	}
+
+	infoLog.Printf("Starting server on %s", *addr)
+	// Call ListenAndServe() method on our new http.Server struct.
+	err := srv.ListenAndServe()
+	errorLog.Fatal(err)
 }
 
 type neuteredFileSystem struct {
