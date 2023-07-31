@@ -1,0 +1,20 @@
+{{define "base"}}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{template "title" .}} - Snippetbox</title>
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">Snippetbox</a></h1>
+        </header>
+        <!-- Invoke the navigation template -->
+        {{template "nav"}}
+        <main>
+            {{template "main" .}}
+        </main>
+        <footer>Developed by <a href="https://sangdennis.com">Sang Dennis</a></footer>
+    </body>
+</html>
+{{end}}
