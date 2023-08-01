@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"path/filepath"
 	"os"
 )
 
@@ -28,23 +27,13 @@ func main() {
 		infoLog: infoLog,
 	}
 
-	mux := http.NewServeMux()
-
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	// Swap the route declarations to use the application struct's methods as handlers.
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-
 	// Initialize a new http.Server struct. Set the Addr and Handler fields so that the
 	// server uses the same network address routes as before. Set the ErrorLog field
 	// so that the server now uses the custom errorLog logger.
 	srv := &http.Server{
 		Addr: *addr,
 		ErrorLog: errorLog,
-		Handler: mux,
+		Handler: app.routes(),
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
@@ -52,33 +41,3 @@ func main() {
 	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
-
-type neuteredFileSystem struct {
-	fs http.FileSystem
-}
-
-func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
-    f, err := nfs.fs.Open(path)
-    if err != nil {
-        return nil, err
-    }
-
-    s, err := f.Stat()
-	if err != nil {
-        return nil, err
-    }
-
-    if s.IsDir() {
-        index := filepath.Join(path, "index.html")
-        if _, err := nfs.fs.Open(index); err != nil {
-            closeErr := f.Close()
-            if closeErr != nil {
-                return nil, closeErr
-            }
-
-            return nil, err
-        }
-    }
-
-    return f, nil
-}    
