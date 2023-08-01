@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"snippetbox.sangdennis.com/internal/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -14,11 +15,11 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	// Define an new command-line flag for the MySQL DSN string.
 	dsn := flag.String("dsn", "web:Naingia12@/snippetbox?parseTime=true", "MySQL data soure name")
 
 	flag.Parse()
@@ -31,14 +32,13 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-
-	// call db.Close() to ensure the connection pool is closed before main() exits.
 	defer db.Close()
 
 	// Initialize a new instance of application struct containing dependencies.
 	app := &application{
 		errorLog: errorLog,
 		infoLog: infoLog,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	// Initialize a new http.Server struct. Set the Addr and Handler fields so that the
