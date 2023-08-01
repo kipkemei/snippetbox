@@ -19,7 +19,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	snippets, err := app.snippets.Latest()
 	if err != nil {
-		app.serveError(w, err)
+		app.serverError(w, err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// // to send a generic 500 Internal Server Error response to the user.
 	// ts, err := template.ParseFiles(files...)
 	// if err != nil {
-	// 	app.serveError(w, err) // Use the serverError() helper
+	// 	app.serverError(w, err) // Use the serverError() helper
 	// 	return
 	// }
 
@@ -50,7 +50,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// // represents any dynamic data that we want to pass in, nil for now.
 	// err = ts.ExecuteTemplate(w, "base", nil)
 	// if err != nil {
-	// 	app.serveError(w, err) // Use the serverError() helper
+	// 	app.serverError(w, err) // Use the serverError() helper
 	// }
 }
 
@@ -69,7 +69,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
-			app.serveError(w, err)
+			app.serverError(w, err)
 		}
 		return
 	}
