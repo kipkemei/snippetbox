@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"snippetbox.sangdennis.com/internal/models"
 )
 
 // Change the signature of home() to be defined as a method against *application.
@@ -48,7 +51,21 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	// Use the SnippetModel object's Get method to retrieve the data for a
+	// specific record based on its ID. If no matching record is found,
+	// return a 404 Not Found response.
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serveError(w, err)
+		}
+		return
+	}
+
+	// Write the snippet data as a plain-text HTTP response body.
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
