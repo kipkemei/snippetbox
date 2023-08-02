@@ -38,6 +38,9 @@ func main() {
 
 	// Initialize a new template cache..
 	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 
 	// Initialize a new instance of application struct containing dependencies.
 	app := &application{
