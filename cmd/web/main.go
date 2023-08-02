@@ -3,19 +3,21 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
-	"snippetbox.sangdennis.com/internal/models"
 	_ "github.com/go-sql-driver/mysql"
+	"snippetbox.sangdennis.com/internal/models"
 )
 
 // Define an application struct to hold application-wide dependencies.
 type application struct {
-	errorLog *log.Logger
-	infoLog *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -34,20 +36,24 @@ func main() {
 	}
 	defer db.Close()
 
+	// Initialize a new template cache..
+	templateCache, err := newTemplateCache()
+
 	// Initialize a new instance of application struct containing dependencies.
 	app := &application{
-		errorLog: errorLog,
-		infoLog: infoLog,
-		snippets: &models.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// Initialize a new http.Server struct. Set the Addr and Handler fields so that the
 	// server uses the same network address routes as before. Set the ErrorLog field
 	// so that the server now uses the custom errorLog logger.
 	srv := &http.Server{
-		Addr: *addr,
+		Addr:     *addr,
 		ErrorLog: errorLog,
-		Handler: app.routes(),
+		Handler:  app.routes(),
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)

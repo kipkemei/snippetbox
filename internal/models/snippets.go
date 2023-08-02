@@ -9,8 +9,8 @@ import (
 // Define a Snippet type to hold data for an individual snippet.
 // The fields should correspond to the fields in MySQL snippets table.
 type Snippet struct {
-	ID int
-	Title string
+	ID      int
+	Title   string
 	Content string
 	Created time.Time
 	Expires time.Time
@@ -29,7 +29,7 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 
 	// Use DB.Exec() on the embedded connection pool to execute the statement.
 	// The first parameter is the SQL statement, followed by fields values for
-	// placeholder parameters. 
+	// placeholder parameters.
 	// This method returns a sql.Result type, which contains basic information about
 	// what happened when the statement was executed.
 	result, err := m.DB.Exec(stmt, title, content, expires)
@@ -64,7 +64,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 
 	// Use row.Scan() to copy the values from each field in sql.Row to the corresponding
 	// field in the Snippet struct. The arguments to row.Scan() are *pointers* to the place
-	// you want to copy the data into, and the no. of arguments must be exactly the same as 
+	// you want to copy the data into, and the no. of arguments must be exactly the same as
 	// the number of columns returned by the statement.
 	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
@@ -104,7 +104,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	snippets := []*Snippet{}
 
 	// Use rows.Next to iterate through the rows in the resultset. This prepares the first
-	// (and then each subsequent) row to be acted on by rows.Scan() method. If iteration over 
+	// (and then each subsequent) row to be acted on by rows.Scan() method. If iteration over
 	// all the rows completes then the resultset automatically closes itself and frees-up the
 	// underlying database connection.
 	for rows.Next() {
@@ -123,7 +123,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 		snippets = append(snippets, s)
 	}
 
-	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error that 
+	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error that
 	// was encountered during the iteration. It is IMPORTANT to call this. DON'T assume that
 	// a successful iteration was completed over the whole resultset.
 	if err = rows.Err(); err != nil {
