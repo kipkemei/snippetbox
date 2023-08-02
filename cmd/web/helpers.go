@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // the serverError helper writes an error message and stack trace to the errorLog,
@@ -57,4 +58,12 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	// Write the contents of the buffer to the http.ResponseWriter.
 	// NOTE: pass http.ResponseWriter to a function that takes io.Writer
 	buf.WriteTo(w)
+}
+
+// Create a newTemplateData() helper, which returns a pointer to templateData struct intialized
+// with the current year.
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
