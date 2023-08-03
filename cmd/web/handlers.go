@@ -73,7 +73,24 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
+	// Initialize a new createSnippetForm instance and pass it to the template.
+	// Set any default values for the form e.g snippet expiry to 365 days.
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
+
 	app.render(w, http.StatusOK, "create.html", data)
+}
+
+// Define a snippetCreateForm struct to represent the form data and validation errors
+// for the form fields. NOTE: All struct fields are deliberately exported (i.e start
+// with capitral letter). This is because struct fields must be exported in order to
+// be read by html/template package when rendering the template.
+type snippetCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	FieldErrors map[string]string
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -87,11 +104,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Use the r.PostForm.Get() method to retrieve the title and content from the
-	// r.PostForm map.
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-
 	// The r.PostForm.Get() method always returns the form data as a *string*.
 	// However, expires value should be a number to be represented as an integer.
 	// Manually convert the form data to an integer using strconv.Atoi(), send
@@ -101,40 +113,49 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.clientError(w, http.StatusBadRequest)
 	}
 
-	// Initialize a map to hold any validation errors for the form fields.
-	fieldErrors := make(map[string]string)
+	// Create an instance of snippetCreateForm struct containing the values from
+	// the form and an empty map for any validation errors.
+	form := snippetCreateForm{
+		Title:       r.PostForm.Get("title"),
+		Content:     r.PostForm.Get("content"),
+		Expires:     expires,
+		FieldErrors: map[string]string{},
+	}
 
 	// Check that the title value is not blank and is not more than 100 characters
 	// long. If it fails either of those checks, add a message to the errors map
 	// using the field name as the key.
-	if strings.TrimSpace(title) == "" {
-		fieldErrors["title"] = "This field cannot be blank"
-	} else if utf8.RuneCountInString(title) > 100 {
-		fieldErrors["title"] = "This field cannot be more than 100 characters long."
+	if strings.TrimSpace(form.Title) == "" {
+		form.FieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(form.Title) > 100 {
+		form.FieldErrors["title"] = "This field cannot be more than 100 characters long."
 	}
 
 	// Check that the content value isn't blank.
-	if strings.TrimSpace(content) == "" {
-		fieldErrors["content"] = "This field cannot be blank"
+	if strings.TrimSpace(form.Content) == "" {
+		form.FieldErrors["content"] = "This field cannot be blank"
 	}
 
 	// Check that the expires value matches one of the permitted values (1, 7 or 365).
 	if expires != 1 && expires != 7 && expires != 365 {
-		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+		form.FieldErrors["expires"] = "This field must equal 1, 7 or 365"
 	}
 
 	// If there are any errors, dump them in a plain text HTTP response and return from handler.
-	if len(fieldErrors) > 0 {
-		fmt.Fprint(w, fieldErrors)
+	if len(form.FieldErrors) > 0 {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.html", data)
 		return
 	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	// Pass the data from snippetCreateForm instance to Insert() method
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	// Update the redirect path to use the new clean URL format.
+	// Redirect path to use the new clean URL format.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
