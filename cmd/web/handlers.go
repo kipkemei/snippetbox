@@ -75,16 +75,29 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Checking if the request method is a POST is now superfluos and can be
-	// removed, because this is done automatically by httprouter.
-	// if r.Method != http.MethodPost {
-	// 	app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper
-	// 	return
-	// }
+	// First we call r.ParseForm() which adds any data in POST request bodies to the
+	// r.PostForm map. This also works in the same way for PUT and PATCH requests.
+	// If there are any errors, use app.clientError() helper to send a 400 Bad Request
+	// response to the user.
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
-	title := "0 snail"
-	content := "0 snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n - Koyabashi Issa"
-	expires := 7
+	// Use the r.PostForm.Get() method to retrieve the title and content from the
+	// r.PostForm map.
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("conetnt")
+
+	// The r.PostForm.Get() method always returns the form data as a *string*.
+	// However, expires value should be a number to be represented as an integer.
+	// Manually convert the form data to an integer using strconv.Atoi(), send
+	// a 400 Bad Request response if the conversion fails.
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
 
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
