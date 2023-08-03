@@ -14,16 +14,15 @@ import (
 // to it as the build progresses.
 type templateData struct {
 	CurrentYear int
-	Snippet  *models.Snippet
-	Snippets []*models.Snippet
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet
 }
 
-// Create humanDate() which returns a nicely formatted string representation 
+// Create humanDate() which returns a nicely formatted string representation
 // of a time.Time object.
 func humanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 15:04")
-} 
-
+}
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -59,7 +58,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Call ParseGlob() *on this template set* to add any partials.
 		ts, err = ts.ParseGlob("./ui/html/partials/*.html")
 		if err != nil {

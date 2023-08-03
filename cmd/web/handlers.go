@@ -70,7 +70,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 // Add a new snippetCreate handler, which for now returns a placeholder response.
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display the form for creating a new snippet..."))
-} 
+}
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Checking if the request method is a POST is now superfluos and can be
