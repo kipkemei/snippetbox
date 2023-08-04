@@ -87,39 +87,23 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 // be read by html/template package when rendering the template.
 // Embed the Validator type. Embedding this means that our snippetCreateForm "inherits"
 // all the fields and methods of Validator type (including FieldErrors field)
+// Update snippetCreateForm struct to include struct tags which tell the decoder how to
+// map HTML form values into the different struct fields.
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// First call r.ParseForm() which adds any data in POST request bodies to the
-	// r.PostForm map. This also works in the same way for PUT and PATCH requests.
-	// If there are any errors, use app.clientError() helper to send a 400 Bad Request
-	// response to the user.
-	err := r.ParseForm()
+	// Declare a new instance of the snippetCreateForm struct.
+	var form snippetCreateForm
+
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	// The r.PostForm.Get() method always returns the form data as a *string*.
-	// However, expires value should be a number to be represented as an integer.
-	// Manually convert the form data to an integer using strconv.Atoi(), send
-	// a 400 Bad Request response if the conversion fails.
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-	}
-
-	// Create an instance of snippetCreateForm struct containing the values from
-	// the form and an empty map for any validation errors.
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	// Call CheckField() directly to execute validation checks because Validation type
